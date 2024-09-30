@@ -10,6 +10,9 @@ import { Expose } from 'class-transformer';
 
 @Entity()
 export class Order {
+  static MAX_ITEMS = 5;
+
+  static AMOUNT_MINIMUM = 5;
   @CreateDateColumn()
   @Expose({ groups: ['group_orders'] })
   createdAt: Date;
