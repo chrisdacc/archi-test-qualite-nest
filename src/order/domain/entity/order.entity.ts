@@ -7,7 +7,6 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Expose } from 'class-transformer';
-import { BadRequestException } from '@nestjs/common';
 
 export enum OrderStatus {
   PENDING = 'PENDING',
@@ -17,11 +16,16 @@ export enum OrderStatus {
   CANCELED = 'CANCELED',
 }
 
-export const MAX_PRICE = 500;
 @Entity()
 export class Order {
   static MAX_ITEMS = 5;
+
   static AMOUNT_MINIMUM = 5;
+
+  static AMOUNT_MAXIMUM = 500;
+
+  static DELIVERY_FEE = 5;
+
   @CreateDateColumn()
   @Expose({ groups: ['group_orders'] })
   createdAt: Date;
@@ -48,6 +52,8 @@ export class Order {
   @Expose({ groups: ['group_orders'] })
   shippingAddress: string | null;
 
+  @Column({ nullable: true })
+  @Expose({ groups: ['group_orders'] })
   invoiceAddress: string | null;
 
   @Column({ nullable: true })
@@ -61,13 +67,35 @@ export class Order {
   @Column({ nullable: true })
   @Expose({ groups: ['group_orders'] })
   private paidAt: Date | null;
-  
+
   pay(): void {
-    if(this.status != OrderStatus.PENDING || this.price > MAX_PRICE){
-      throw new BadRequestException('Please make sure that your order is not already paid or it s price does not exceed 500 euros.')
+    if (this.status !== OrderStatus.PENDING) {
+      throw new Error('Commande déjà payée');
     }
+
+    if (this.price > Order.AMOUNT_MAXIMUM) {
+      throw new Error('Montant maximum dépassé');
+    }
+
     this.status = OrderStatus.PAID;
-    this.paidAt = new Date('NOW');
+    this.paidAt = new Date();
+  }
+
+  setShippingAddress(shippingAddress : string): void {
+    if(this.orderItems.length <= 3) {
+      throw new Error('Commande contient moins de 3 items');
+    }
+
+    if(this.status !== OrderStatus.PENDING){
+      throw new Error('Commande déjà envoyée');
+    }
+    this.shippingAddress = shippingAddress;
+    this.price = this.price + Order.DELIVERY_FEE;
+    this.shippingAddressSetAt = new Date();
+
+    if(this.shippingAddress == null){
+      throw new Error('Adresse de livraison non renseignée');
+    }
     
   }
 }
