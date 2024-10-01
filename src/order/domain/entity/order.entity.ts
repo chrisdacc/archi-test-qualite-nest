@@ -7,9 +7,11 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Expose } from 'class-transformer';
+import { CreateOrderCommand } from '../use-case/create-order.service';
 
 export enum OrderStatus {
   PENDING = 'PENDING',
+  SHIPPING_ADDRESS_SET = 'SHIPPING_ADDRESS_SET',
   PAID = 'PAID',
   SHIPPED = 'SHIPPED',
   DELIVERED = 'DELIVERED',
@@ -24,7 +26,7 @@ export class Order {
 
   static AMOUNT_MAXIMUM = 500;
 
-  static DELIVERY_FEE = 5;
+  static SHIPPING_COST = 5;
 
   @CreateDateColumn()
   @Expose({ groups: ['group_orders'] })
@@ -68,6 +70,36 @@ export class Order {
   @Expose({ groups: ['group_orders'] })
   private paidAt: Date | null;
 
+  constructor(createOrderCommand: CreateOrderCommand) {
+    const { customerName, items, shippingAddress, invoiceAddress } = createOrderCommand;
+
+    if (!customerName || !items || !shippingAddress || !invoiceAddress) {
+      throw new Error('Missing required fields');
+    }
+
+    if (items.length === 0) {
+      throw new Error('Order must contain at least one item');
+    }
+
+    if (items.length > 5) {
+      throw new Error('Order cannot contain more than 5 items');
+    }
+
+    const totalPrice = items.reduce((sum, item) => sum + item.price, 0);
+
+    if (totalPrice < 10) {
+      throw new Error('Order total must be at least 10 euros');
+    }
+
+    this.customerName = customerName;
+    this.shippingAddress = shippingAddress;
+    this.invoiceAddress = invoiceAddress;
+    this.price = totalPrice;
+    this.status = 'pending';
+    this.createdAt = new Date();
+
+  }
+
   pay(): void {
     if (this.status !== OrderStatus.PENDING) {
       throw new Error('Commande déjà payée');
@@ -81,21 +113,19 @@ export class Order {
     this.paidAt = new Date();
   }
 
-  setShippingAddress(shippingAddress : string): void {
-    if(this.orderItems.length <= 3) {
-      throw new Error('Commande contient moins de 3 items');
+  setShippingAddress(customerAddress: string): void {
+    if (
+      this.status !== OrderStatus.PENDING &&
+      this.status !== OrderStatus.SHIPPING_ADDRESS_SET
+    ) {
+      throw new Error('Commande non payée');
     }
-
-    if(this.status !== OrderStatus.PENDING){
-      throw new Error('Commande déjà envoyée');
+    if (this.orderItems.length < Order.MAX_ITEMS) {
+      throw new Error('Moins de 3 articles');
     }
-    this.shippingAddress = shippingAddress;
-    this.price = this.price + Order.DELIVERY_FEE;
+    this.status = OrderStatus.SHIPPING_ADDRESS_SET;
     this.shippingAddressSetAt = new Date();
-
-    if(this.shippingAddress == null){
-      throw new Error('Adresse de livraison non renseignée');
-    }
-    
+    this.shippingAddress = customerAddress;
+    this.price += Order.SHIPPING_COST;
   }
 }

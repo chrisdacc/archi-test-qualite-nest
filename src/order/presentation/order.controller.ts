@@ -5,14 +5,13 @@ import {
   CreateOrderService,
 } from 'src/order/domain/use-case/create-order.service';
 import { PayOrderService } from 'src/order/domain/use-case/pay-order.service';
-import { ShipAddressOrderService } from 'src/order/domain/use-case/ship-address-order.service';
+import { SetShippingAddressOrderService } from 'src/order/domain/use-case/ship-address-order.service';
 
 @Controller('/orders')
 export default class OrderController {
   constructor(
     private readonly createOrderService: CreateOrderService,
     private readonly payOrderService: PayOrderService,
-    private readonly shipAddressOrderService : ShipAddressOrderService,
   ) {}
 
   @Post()
@@ -24,11 +23,7 @@ export default class OrderController {
 
   @Post()
   async payOrder(@Param('id') id: string): Promise<Order> {
-    return await this.payOrderService.payOrder(id);
+    return await this.payOrderService.execute(id);
   }
 
-  @Post('/ship')
-  async shipAddressOrder(@Param('id') id: string): Promise<Order> {
-    return await this.shipAddressOrderService.shipAddressOrder(id);
-  }
 }

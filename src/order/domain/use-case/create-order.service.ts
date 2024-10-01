@@ -1,5 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import { Order } from 'src/order/domain/entity/order.entity';
+import OrderRepository from 'src/order/infrastructure/order.repository';
 
 export interface ItemDetailCommand {
   productName: string;
@@ -12,42 +13,14 @@ export interface CreateOrderCommand {
   shippingAddress: string;
   invoiceAddress: string;
 }
-
 export class CreateOrderService {
-  createOrder(createOrderCommand: CreateOrderCommand): string {
-    const { items, customerName, shippingAddress, invoiceAddress } =
-      createOrderCommand;
+  constructor(private readonly orderRepository: OrderRepository){}
 
-    if (
-      !customerName ||
-      !items ||
-      items.length === 0 ||
-      !shippingAddress ||
-      !invoiceAddress
-    ) {
-      throw new BadRequestException('Missing required fields');
-    }
+  async createOrder(createOrderCommand: CreateOrderCommand): Promise<Order>{
+    const order = new Order(createOrderCommand);
 
-    if (items.length > Order.MAX_ITEMS) {
-      throw new BadRequestException(
-        'Cannot create order with more than 5 items',
-      );
-    }
-
-    const totalAmount = this.calculateOrderAmount(items);
-
-    return 'OK. Montant de la commande: ' + totalAmount;
+    return await this.orderRepository.save(order);
   }
-
-  private calculateOrderAmount(items: ItemDetailCommand[]): number {
-    const totalAmount = items.reduce((sum, item) => sum + item.price, 0);
-
-    if (totalAmount < Order.AMOUNT_MINIMUM) {
-      throw new BadRequestException(
-        `Cannot create order with total amount less than ${Order.AMOUNT_MINIMUM}€`,
-      );
-    }
-
-    return totalAmount;
-  }
+  
 }
+

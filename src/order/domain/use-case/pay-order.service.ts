@@ -5,7 +5,7 @@ import { NotFoundException } from "@nestjs/common";
 export class PayOrderService {
     constructor(private readonly orderRepository: OrderRepository){}
 
-    public async payOrder(orderId: string): Promise<Order> {
+    public async execute(orderId: string): Promise<Order> {
         const order = await this.orderRepository.findById(orderId);
 
         if(!order){
