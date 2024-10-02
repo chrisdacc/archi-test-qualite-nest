@@ -39,9 +39,9 @@ export class OrderItem {
         'Quantity of items cannot exceed ' + OrderItem.MAX_QUANTITY,
       );
     }
+
     this.productName = itemCommand.productName;
     this.quantity = itemCommand.quantity;
     this.price = itemCommand.price;
   }
 }
-

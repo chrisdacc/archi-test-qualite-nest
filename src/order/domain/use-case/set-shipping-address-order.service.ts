@@ -1,18 +1,23 @@
-		
 import { NotFoundException } from '@nestjs/common';
 import { Order } from 'src/order/domain/entity/order.entity';
 import OrderRepository from 'src/order/infrastructure/order.repository';
-export class SetInvoiceAddressOrderService {
-  constructor(private readonly orderRepository: OrderRepository) {}
+import { OrderRepositoryInterface } from '../port/order.repository.interface';
+
+export class SetShippingAddressOrderService {
+  constructor(private readonly orderRepository: OrderRepositoryInterface) {}
+
   public async execute(
     orderId: string,
-    invoiceAddress: string,
+    customerAddress: string,
   ): Promise<Order> {
     const order = await this.orderRepository.findById(orderId);
+
     if (!order) {
       throw new NotFoundException('Pas de commande');
     }
-    order.setInvoiceAddress(invoiceAddress);
+
+    order.setShippingAddress(customerAddress);
+
     return this.orderRepository.save(order);
   }
 }
