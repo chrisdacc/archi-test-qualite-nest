@@ -1,9 +1,9 @@
-import OrderRepository from "src/order/infrastructure/order.repository";
 import { Order } from "../entity/order.entity";
 import { NotFoundException } from "@nestjs/common";
+import { OrderRepositoryInterface } from "../port/order.repository.interface";
 
 export class PayOrderService {
-    constructor(private readonly orderRepository: OrderRepository){}
+    constructor(private readonly orderRepository: OrderRepositoryInterface) {}
 
     public async execute(orderId: string): Promise<Order> {
         const order = await this.orderRepository.findById(orderId);
