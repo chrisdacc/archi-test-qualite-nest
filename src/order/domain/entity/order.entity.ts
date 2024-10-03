@@ -28,6 +28,7 @@ export enum OrderStatus {
 
 @Entity()
 export class Order {
+  
   static MAX_ITEMS = 5;
 
   static AMOUNT_MINIMUM = 5;
@@ -212,5 +213,12 @@ export class Order {
     this.status = OrderStatus.CANCELED;
     this.cancelAt = new Date('NOW');
     this.cancelReason = cancelReason;
+  }
+
+  getDetails() : string{
+    if ( this.status !== OrderStatus.PAID ) {
+      throw new Error('Vous ne pouvez pas générer de facture pour une commande non payée');
+    }
+    return this.orderItems.toString();
   }
 }

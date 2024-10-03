@@ -10,6 +10,8 @@ import { PayOrderService } from 'src/order/domain/use-case/pay-order.service';
 import { CancelOrderService } from 'src/order/domain/use-case/cancel-order.service';
 import { SetInvoiceAddressOrderService } from 'src/order/domain/use-case/set-invoice-address-order.service';
 import { SetShippingAddressOrderService } from 'src/order/domain/use-case/set-shipping-address-order.service';
+import { GeneratePDFOrderService } from './domain/use-case/generate-pdf-order.service';
+import { PdfGeneratorInterface } from './domain/port/pdf-generator.interface';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Order, OrderItem])],
@@ -50,6 +52,13 @@ import { SetShippingAddressOrderService } from 'src/order/domain/use-case/set-sh
       provide: SetShippingAddressOrderService,
       useFactory: (orderRepository: OrderRepositoryInterface) => {
         return new SetShippingAddressOrderService(orderRepository);
+      },
+      inject: [OrderRepositoryTypeOrm],
+    },
+    {
+      provide: GeneratePDFOrderService,
+      useFactory: (orderRepository: OrderRepositoryInterface, pdfGenerator : PdfGeneratorInterface) => {
+        return new GeneratePDFOrderService(orderRepository, pdfGenerator);
       },
       inject: [OrderRepositoryTypeOrm],
     }
