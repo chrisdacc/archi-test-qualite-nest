@@ -28,7 +28,6 @@ export enum OrderStatus {
 
 @Entity()
 export class Order {
-  
   static MAX_ITEMS = 5;
 
   static AMOUNT_MINIMUM = 5;
@@ -215,10 +214,18 @@ export class Order {
     this.cancelReason = cancelReason;
   }
 
-  getDetails() : string{
-    if ( this.status !== OrderStatus.PAID ) {
-      throw new Error('Vous ne pouvez pas générer de facture pour une commande non payée');
+  getInvoiceInfos(): string {
+    if (
+      this.status !== OrderStatus.PAID &&
+      this.status !== OrderStatus.SHIPPED &&
+      this.status !== OrderStatus.DELIVERED
+    ) {
+      throw new Error('Order is not paid');
     }
-    return this.orderItems.toString();
+
+    const itemsNames = this.orderItems
+      .map((item) => item.productName)
+      .join(', ');
+    return `invoice number ${this.id}, with items: ${itemsNames}`;
   }
 }
